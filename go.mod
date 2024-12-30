@@ -1,4 +1,4 @@
-module thunder
+module github.com/mszlu521/thunder
 
 go 1.23.1
 
