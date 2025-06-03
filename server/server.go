@@ -4,12 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/gin-gonic/gin"
 )
 
 type Server struct {
@@ -19,7 +20,6 @@ type Server struct {
 	RouterRegister RegisterHandler
 	OtherHandle    func(*gin.Engine)
 	StopHandle     func(*gin.Engine)
-	cancel         context.CancelFunc
 	g              *gin.Engine
 	Cros           bool
 	Auth           bool
@@ -44,7 +44,6 @@ func (s *Server) Run(ctx context.Context) error {
 	if ctx == nil {
 		var cancel context.CancelFunc
 		ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
-		s.cancel = cancel
 		defer cancel()
 	}
 	go func() {
@@ -54,10 +53,6 @@ func (s *Server) Run(ctx context.Context) error {
 		//启动之前 还有别的事情去处理 比如启动监控等
 		if s.OtherHandle != nil {
 			s.OtherHandle(r)
-		}
-		//完成前置操作 取消超时context
-		if s.cancel != nil {
-			s.cancel()
 		}
 		//http接口
 		if err := r.Run(fmt.Sprintf("%s:%d", s.Host, s.Port)); err != nil {
@@ -69,12 +64,6 @@ func (s *Server) Run(ctx context.Context) error {
 	signal.Notify(c, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGINT, syscall.SIGHUP)
 	for {
 		select {
-		case <-ctx.Done():
-			if errors.Is(ctx.Err(), context.DeadlineExceeded) {
-				s.stop()
-				//time out
-				return errors.New("server run time out")
-			}
 		case signal := <-c:
 			switch signal {
 			case syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGINT:
