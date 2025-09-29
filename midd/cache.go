@@ -5,12 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/mszlu521/thunder/cache"
+	"github.com/mszlu521/thunder/config"
+	"github.com/mszlu521/thunder/logs"
+	"github.com/mszlu521/thunder/res"
+	"github.com/mszlu521/thunder/tools/crypro"
 	"io"
-	"log"
 	"net/http"
-	"thunder/cache"
-	"thunder/res"
-	"thunder/tools/crypro"
 	"time"
 )
 
@@ -26,11 +27,11 @@ func (w *CustomResponseWriter) Write(p []byte) (n int, err error) {
 	// 使用 gin 原有的 ResponseWriter 将数据写回客户端
 	return w.ResponseWriter.Write(p)
 }
-func Cache(needCache []string) gin.HandlerFunc {
+func Cache(cacheConfig config.Cache) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		//打印超时时间
 		start := time.Now()
-		for _, pattern := range needCache {
+		for _, pattern := range cacheConfig.NeedCache {
 			if isMatch(c.Request.URL.Path, pattern) {
 				//对数据进行缓存
 				if c.Request.Method == http.MethodPost {
@@ -44,17 +45,17 @@ func Cache(needCache []string) gin.HandlerFunc {
 					redisCache := cache.NewRedisCache()
 					writer := &CustomResponseWriter{body: bytes.NewBuffer([]byte{}), ResponseWriter: c.Writer}
 					c.Writer = writer
-					log.Println("cache -------start----- time:", time.Since(start))
+					logs.Infof("cache -------start----- time: %s", time.Since(start))
 					if redisCache.Exist(cacheKey) {
-						log.Println("cache Exist time:", time.Since(start))
+						logs.Infof("cache Exist time: %s", time.Since(start))
 						cacheData, err := redisCache.Get(cacheKey)
 						if err == nil {
 							c.Data(http.StatusOK, "application/json", []byte(cacheData))
 							c.Abort()
-							log.Println("cache time:", time.Since(start))
+							logs.Infof("cache time: %s", time.Since(start))
 							return
 						}
-						log.Println("get cache err:", err)
+						logs.Errorf("get cache err: %v", err)
 						c.Next()
 					} else {
 						c.Next()
@@ -64,12 +65,15 @@ func Cache(needCache []string) gin.HandlerFunc {
 						var result res.Result
 						err := json.Unmarshal(responseBody.Bytes(), &result)
 						if err != nil {
-							log.Println("cache json Unmarshal err:", err)
+							logs.Errorf("cache json Unmarshal err: %v", err)
 						} else {
 							if result.Code == res.OK {
-								err := redisCache.Set(cacheKey, string(responseBody.Bytes()), 60*5)
+								if cacheConfig.Expire == 0 {
+									cacheConfig.Expire = 5 * 60 //默认5分钟
+								}
+								err := redisCache.Set(cacheKey, string(responseBody.Bytes()), cacheConfig.Expire)
 								if err != nil {
-									log.Println("cache redisCache.Set err:", err)
+									logs.Errorf("cache redisCache.Set err: %v", err)
 								}
 							}
 						}

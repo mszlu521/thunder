@@ -2,12 +2,12 @@ package upload
 
 import (
 	"context"
+	"github.com/mszlu521/thunder/config"
 	"github.com/qiniu/go-sdk/v7/storagev2/credentials"
 	"github.com/qiniu/go-sdk/v7/storagev2/http_client"
 	"github.com/qiniu/go-sdk/v7/storagev2/region"
 	"github.com/qiniu/go-sdk/v7/storagev2/uploader"
 	"io"
-	"thunder/config"
 )
 
 var QiniuUploadManager *QiniuUpload

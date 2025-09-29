@@ -2,24 +2,23 @@ package server
 
 import (
 	"github.com/gin-gonic/gin"
-	"thunder/midd"
+	"github.com/mszlu521/thunder/config"
+	"github.com/mszlu521/thunder/midd"
 )
 
-type RegisterHandler func(*gin.Engine)
+// IRouter 定义路由注册接口
+type IRouter interface {
+	Register(engine *gin.Engine)
+}
 
-func RegisterRouter(s *Server) *gin.Engine {
-	r := gin.Default()
-	if s.Cros {
-		r.Use(midd.Cors())
+func UseCustomMidd(conf *config.Config, engin *gin.Engine) {
+	if len(conf.Server.Cros) > 0 {
+		engin.Use(midd.Cors(conf.Server))
 	}
-	if s.Auth {
-		r.Use(midd.Auth(s.Ignores, s.NeedLogins))
+	if conf.Auth.IsAuth {
+		engin.Use(midd.Auth(conf.Auth))
 	}
-	if len(s.NeedCache) > 0 {
-		r.Use(midd.Cache(s.NeedCache))
+	if len(conf.Cache.NeedCache) > 0 {
+		engin.Use(midd.Cache(conf.Cache))
 	}
-	if s.RouterRegister != nil {
-		s.RouterRegister(r)
-	}
-	return r
 }

@@ -2,11 +2,11 @@ package wx
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/mszlu521/thunder/req"
+	"github.com/mszlu521/thunder/res"
+	"github.com/mszlu521/thunder/tools/crypro"
 	"sort"
 	"strings"
-	"thunder/req"
-	"thunder/res"
-	"thunder/tools/crypro"
 )
 
 type TokenVerifyReq struct {

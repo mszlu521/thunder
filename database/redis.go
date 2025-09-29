@@ -1,26 +1,26 @@
 package database
 
 import (
+	"github.com/mszlu521/thunder/config"
+	"github.com/mszlu521/thunder/db"
 	"github.com/redis/go-redis/v9"
-	"thunder/config"
-	"thunder/db"
 )
 
 var (
 	RedisCli *db.Redis
 )
 
-func InitRedis() {
+func InitRedis(redisConf config.Redis) {
 	r := db.Redis{
 		Options: &redis.Options{
-			Addr:           config.Conf.DB.Redis.Addr,
-			DB:             config.Conf.DB.Redis.DB,
-			Password:       config.Conf.DB.Redis.Password,
-			MaxActiveConns: config.Conf.DB.Redis.MaxOpenConns,
-			PoolSize:       config.Conf.DB.Redis.PoolSize,
-			MaxIdleConns:   config.Conf.DB.Redis.MaxIdleConns,
+			Addr:           redisConf.Addr,
+			DB:             redisConf.DB,
+			Password:       redisConf.Password,
+			MaxActiveConns: redisConf.MaxOpenConns,
+			PoolSize:       redisConf.PoolSize,
+			MaxIdleConns:   redisConf.MaxIdleConns,
 		},
 	}
-	r.Init()
+	r.Init(redisConf)
 	RedisCli = &r
 }

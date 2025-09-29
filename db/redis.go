@@ -2,8 +2,8 @@ package db
 
 import (
 	"context"
+	"github.com/mszlu521/thunder/config"
 	"github.com/redis/go-redis/v9"
-	"thunder/config"
 	"time"
 )
 
@@ -12,15 +12,15 @@ type Redis struct {
 	Client  *redis.Client
 }
 
-func (r *Redis) Init() {
+func (r *Redis) Init(redisConf config.Redis) {
 	if r.Options == nil {
 		r.Options = &redis.Options{
-			Addr:           config.Conf.DB.Redis.Addr,
-			DB:             config.Conf.DB.Redis.DB,
-			Password:       config.Conf.DB.Redis.Password,
-			PoolSize:       config.Conf.DB.Redis.PoolSize,
-			MaxIdleConns:   config.Conf.DB.Redis.MaxIdleConns,
-			MaxActiveConns: config.Conf.DB.Redis.MaxOpenConns,
+			Addr:           redisConf.Addr,
+			DB:             redisConf.DB,
+			Password:       redisConf.Password,
+			PoolSize:       redisConf.PoolSize,
+			MaxIdleConns:   redisConf.MaxIdleConns,
+			MaxActiveConns: redisConf.MaxOpenConns,
 		}
 	}
 	rdb := redis.NewClient(r.Options)

@@ -3,16 +3,16 @@ package midd
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/mszlu521/thunder/config"
+	"github.com/mszlu521/thunder/tools/jwt"
 	"net/http"
 	"regexp"
 	"strings"
-	"thunder/config"
-	"thunder/tools/jwt"
 )
 
-func Auth(ignores []string, needLogins []string) gin.HandlerFunc {
+func Auth(authConf config.Auth) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		for _, pattern := range ignores {
+		for _, pattern := range authConf.Ignores {
 			if isMatch(c.Request.URL.Path, pattern) {
 				c.Next()
 				return
@@ -21,19 +21,19 @@ func Auth(ignores []string, needLogins []string) gin.HandlerFunc {
 		// 从请求头中获取 token
 		tokenString := c.GetHeader("Authorization")
 		if tokenString == "" {
-			reject(c, "Authorization header is missing", needLogins)
+			reject(c, "Authorization header is missing", authConf.NeedLogins)
 			return
 		}
 		// 删除 "Bearer " 前缀，只保留 token 部分
 		if len(tokenString) > 7 && strings.ToLower(tokenString[:7]) == "bearer " {
 			tokenString = tokenString[7:]
 		}
-		userId, err := jwt.ParseJWTCustom(tokenString, []byte(config.Conf.Jwt.Secret))
+		claims, err := jwt.ParseToken(tokenString)
 		if err != nil {
-			reject(c, "Invalid token", needLogins)
+			reject(c, "Invalid token", authConf.NeedLogins)
 			return
 		}
-		c.Set("userId", userId)
+		c.Set("userId", claims.UserId)
 		c.Next()
 	}
 }

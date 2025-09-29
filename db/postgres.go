@@ -3,32 +3,34 @@ package db
 import (
 	"context"
 	"fmt"
-	"gorm.io/driver/mysql"
-	"gorm.io/gorm"
-	"gorm.io/gorm/logger"
 	"log"
 	"os"
 	"time"
+
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
-type MySQL struct {
+type Postgres struct {
 	GormConfig   *gorm.Config
 	Username     string
 	Password     string
 	Host         string
 	Port         int
 	Database     string
+	SSLMode      string
 	PingTimeout  time.Duration
 	MaxIdleConns int
 	MaxOpenConns int
 	GormDB       *gorm.DB
 }
 
-func (m *MySQL) Init() error {
-	dsn := "%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local"
-	dsn = fmt.Sprintf(dsn, m.Username, m.Password, m.Host, m.Port, m.Database)
+func (p *Postgres) Init() error {
+	dsn := "host=%s user=%s password=%s dbname=%s port=%d sslmode=%s TimeZone=Asia/Shanghai"
+	dsn = fmt.Sprintf(dsn, p.Host, p.Username, p.Password, p.Database, p.Port, p.SSLMode)
 
-	if m.GormConfig == nil {
+	if p.GormConfig == nil {
 		newLogger := logger.New(
 			log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
 			logger.Config{
@@ -39,30 +41,30 @@ func (m *MySQL) Init() error {
 				Colorful:                  false,       // Disable color
 			},
 		)
-		m.GormConfig = &gorm.Config{
+		p.GormConfig = &gorm.Config{
 			Logger: newLogger,
 		}
 	}
-	db, err := gorm.Open(mysql.Open(dsn), m.GormConfig)
+	db, err := gorm.Open(postgres.Open(dsn), p.GormConfig)
 	if err != nil {
 		return err
 	}
-	m.GormDB = db
+	p.GormDB = db
 	conn, err := db.DB()
 	if err != nil {
 		return err
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), m.PingTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), p.PingTimeout)
 	defer cancel()
 	err = conn.PingContext(ctx)
 	if err != nil {
 		return err
 	}
-	if m.MaxIdleConns != 0 {
-		conn.SetMaxIdleConns(m.MaxIdleConns)
+	if p.MaxIdleConns != 0 {
+		conn.SetMaxIdleConns(p.MaxIdleConns)
 	}
-	if m.MaxOpenConns != 0 {
-		conn.SetMaxOpenConns(m.MaxOpenConns)
+	if p.MaxOpenConns != 0 {
+		conn.SetMaxOpenConns(p.MaxOpenConns)
 	}
 	return nil
 }

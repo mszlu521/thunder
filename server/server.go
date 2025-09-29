@@ -2,9 +2,10 @@ package server
 
 import (
 	"context"
-	"errors"
 	"fmt"
+	"github.com/mszlu521/thunder/config"
 	"log"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -13,74 +14,77 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// Server 是我们应用的核心结构体
 type Server struct {
-	Name           string
-	Port           int
-	Host           string
-	RouterRegister RegisterHandler
-	OtherHandle    func(*gin.Engine)
-	StopHandle     func(*gin.Engine)
-	g              *gin.Engine
-	Cros           bool
-	Auth           bool
-	Ignores        []string
-	NeedLogins     []string
-	NeedCache      []string
+	Engine     *gin.Engine
+	httpServer *http.Server
+	conf       *config.Config
 }
 
-func NewServer(name string, port int, host string) *Server {
+// NewServer 创建一个新的 Server 实例
+func NewServer(conf *config.Config) *Server {
+	// 根据配置设置 Gin 模式
+	gin.SetMode(conf.Server.Mode)
+
+	engine := gin.Default() // 使用默认的中间件 (Logger, Recovery)
+	//自定义的一些中间件，可通过配置文件开启，减少代码重复书写
+	UseCustomMidd(conf, engine)
 	return &Server{
-		Name: name,
-		Port: port,
-		Host: host,
+		Engine: engine,
+		conf:   conf,
 	}
 }
 
-func Default() *Server {
-	return NewServer("default", 8080, "localhost")
+// RegisterRouters 批量注册路由
+// 参数是实现了 IRouter 接口的实例
+func (s *Server) RegisterRouters(routers ...IRouter) {
+	for _, r := range routers {
+		r.Register(s.Engine)
+	}
+	log.Println("Routers registered successfully.")
 }
 
-func (s *Server) Run(ctx context.Context) error {
-	if ctx == nil {
-		var cancel context.CancelFunc
-		ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
+// Start 启动服务并实现优雅启停
+func (s *Server) Start() {
+	// 从配置中获取服务器地址和超时设置
+	address := fmt.Sprintf("%s:%d", s.conf.Server.Host, s.conf.Server.Port)
+	readTimeout := s.conf.Server.ReadTimeout * time.Second
+	writeTimeout := s.conf.Server.WriteTimeout * time.Second
+
+	s.httpServer = &http.Server{
+		Addr:         address,
+		Handler:      s.Engine,
+		ReadTimeout:  readTimeout,
+		WriteTimeout: writeTimeout,
 	}
+
+	// 启动 http server (goroutine)
 	go func() {
-		//注册路由
-		r := RegisterRouter(s)
-		s.g = r
-		//启动之前 还有别的事情去处理 比如启动监控等
-		if s.OtherHandle != nil {
-			s.OtherHandle(r)
-		}
-		//http接口
-		if err := r.Run(fmt.Sprintf("%s:%d", s.Host, s.Port)); err != nil {
-			log.Fatalf("gate gin run err:%v", err)
+		log.Printf("Server starting on http://%s", address)
+		if err := s.httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("Failed to start server: %v", err)
 		}
 	}()
-	//期望有一个优雅启停 遇到中断 退出 终止 挂断
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGINT, syscall.SIGHUP)
-	for {
-		select {
-		case signal := <-c:
-			switch signal {
-			case syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGINT:
-				s.stop()
-				return errors.New("termination")
-			case syscall.SIGHUP:
-				s.stop()
-				return errors.New("hang up")
-			default:
-				return nil
-			}
-		}
-	}
-}
 
-func (s *Server) stop() {
-	if s.StopHandle != nil {
-		s.StopHandle(s.g)
+	// ---- 优雅启停逻辑 ----
+	// 创建一个 channel 用于接收系统信号
+	quit := make(chan os.Signal, 1)
+	// 监听 SIGINT (Ctrl+C) 和 SIGTERM 信号
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+
+	// 阻塞在此，直到接收到信号
+	<-quit
+	log.Println("Shutting down server...")
+
+	// 创建一个有5秒超时的 context
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// 调用 Shutdown() 优雅地关闭服务器
+	// 这会等待正在处理的请求完成，但不会接受新请求
+	if err := s.httpServer.Shutdown(ctx); err != nil {
+		log.Fatalf("Server shutdown failed: %v", err)
 	}
+
+	log.Println("Server exited gracefully.")
 }

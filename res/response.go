@@ -3,8 +3,8 @@ package res
 import (
 	"errors"
 	"github.com/gin-gonic/gin"
+	"github.com/mszlu521/thunder/errs"
 	"net/http"
-	"thunder/errs"
 )
 
 type Result struct {
@@ -39,6 +39,8 @@ func Error(ctx *gin.Context, err error) {
 	case errors.As(err, &er):
 		if errors.Is(er, errs.ErrParam) {
 			ctx.Writer.WriteHeader(http.StatusBadRequest)
+		} else if errors.Is(er, errs.ErrUnauthorized) {
+			ctx.Writer.WriteHeader(http.StatusUnauthorized)
 		} else {
 			Fail(ctx, er)
 		}

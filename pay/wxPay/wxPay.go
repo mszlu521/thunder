@@ -3,7 +3,7 @@ package wxPay
 import (
 	"github.com/go-pay/gopay"
 	"github.com/go-pay/gopay/wechat/v3"
-	"thunder/config"
+	"github.com/mszlu521/thunder/config"
 )
 
 var Instance *WxPay
