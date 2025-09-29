@@ -3,7 +3,6 @@ package server
 import (
 	"context"
 	"fmt"
-	"github.com/mszlu521/thunder/config"
 	"log"
 	"net/http"
 	"os"
@@ -12,6 +11,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/mszlu521/thunder/config"
+	"github.com/mszlu521/thunder/event"
 )
 
 // Server 是我们应用的核心结构体
@@ -37,7 +38,9 @@ func NewServer(conf *config.Config) *Server {
 
 // RegisterRouters 批量注册路由
 // 参数是实现了 IRouter 接口的实例
-func (s *Server) RegisterRouters(routers ...IRouter) {
+func (s *Server) RegisterRouters(event event.IEvent, routers ...IRouter) {
+	//注册 事件
+	event.Register()
 	for _, r := range routers {
 		r.Register(s.Engine)
 	}

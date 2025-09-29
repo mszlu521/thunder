@@ -3,11 +3,11 @@ package upload
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"strings"
-	
+
 	"github.com/aliyun/aliyun-oss-go-sdk/oss"
-	"github.com/mszlu521/thunder/config"
 	"github.com/mszlu521/thunder/logs"
 )
 
@@ -122,13 +122,10 @@ func (a *AliyunOSSUpload) IsAvailable() bool {
 }
 
 // GetObjectURL 获取对象的访问URL
-func (a *AliyunOSSUpload) GetObjectURL(objectKey string) string {
+func (a *AliyunOSSUpload) GetObjectURL(endpoint, bucketName, objectKey string) string {
 	if a == nil || a.bucket == nil {
 		return ""
 	}
-	
-	endpoint := config.Conf.Aliyun.Endpoint
-	bucketName := config.Conf.Aliyun.Bucket
 	
 	// 处理endpoint，确保格式正确
 	if !strings.HasPrefix(endpoint, "http") {
@@ -138,4 +135,8 @@ func (a *AliyunOSSUpload) GetObjectURL(objectKey string) string {
 	// 构造对象URL
 	objectURL := endpoint + "/" + bucketName + "/" + objectKey
 	return objectURL
+}
+
+func (a *AliyunOSSUpload) GetPublicUrl(bucket, endpoint, filename string) string {
+	return fmt.Sprintf("https://%s.%s/%s", bucket, endpoint, filename)
 }
