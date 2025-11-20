@@ -13,6 +13,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/mszlu521/thunder/config"
 	"github.com/mszlu521/thunder/event"
+	"github.com/mszlu521/thunder/pay/wxPay"
 )
 
 // Server 是我们应用的核心结构体
@@ -26,6 +27,9 @@ type Server struct {
 func NewServer(conf *config.Config) *Server {
 	// 根据配置设置 Gin 模式
 	gin.SetMode(conf.Server.Mode)
+
+	// 初始化微信支付
+	wxPay.Init(conf.Pay.WxPay)
 
 	engine := gin.Default() // 使用默认的中间件 (Logger, Recovery)
 	//自定义的一些中间件，可通过配置文件开启，减少代码重复书写

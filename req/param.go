@@ -1,12 +1,14 @@
 package req
 
 import (
+	"log"
+	"strconv"
+
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/mszlu521/thunder/errs"
 	"github.com/mszlu521/thunder/logs"
 	"github.com/mszlu521/thunder/res"
-	"log"
-	"strconv"
 )
 
 func JsonParam(c *gin.Context, obj any) error {
@@ -51,6 +53,7 @@ func PathInt(ctx *gin.Context, paramKey string) (int64, error) {
 func Path(ctx *gin.Context, paramKey string, value any) error {
 	param := PathParam(ctx, paramKey)
 	if param == "" {
+		logs.Errorf("req path parse param err : %v", "param is nil")
 		res.Error(ctx, errs.ErrParam)
 		return errs.ErrParam
 	}
@@ -61,6 +64,7 @@ func Path(ctx *gin.Context, paramKey string, value any) error {
 	case *int:
 		i, err := strconv.Atoi(param)
 		if err != nil {
+			logs.Errorf("req path parse param err : %v", err)
 			res.Error(ctx, errs.ErrParam)
 			return errs.ErrParam
 		}
@@ -68,11 +72,21 @@ func Path(ctx *gin.Context, paramKey string, value any) error {
 	case *int64:
 		i, err := strconv.ParseInt(param, 10, 64)
 		if err != nil {
+			logs.Errorf("req path parse param err : %v", err)
 			res.Error(ctx, errs.ErrParam)
 			return errs.ErrParam
 		}
 		*v = i
+	case *uuid.UUID:
+		var err error
+		*v, err = uuid.Parse(param)
+		if err != nil {
+			logs.Errorf("req path parse param err : %v", err)
+			res.Error(ctx, errs.ErrParam)
+			return errs.ErrParam
+		}
 	default:
+		logs.Errorf("req path parse param err : %v", "no support param type")
 		res.Error(ctx, errs.ErrParam)
 		return errs.ErrParam
 	}
@@ -105,4 +119,18 @@ func GetUserId(ctx *gin.Context) (int64, bool) {
 		return 0, false
 	}
 	return value.(int64), true
+}
+func GetUserIdUUID(ctx *gin.Context) (uuid.UUID, bool) {
+	value, exists := ctx.Get("userId")
+	if !exists {
+		res.Error(ctx, errs.ErrUnauthorized)
+		return uuid.Nil, false
+	}
+	str := value.(string)
+	parse, err := uuid.Parse(str)
+	if err != nil {
+		res.Error(ctx, errs.ErrUnauthorized)
+		return uuid.Nil, false
+	}
+	return parse, true
 }

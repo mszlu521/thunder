@@ -2,15 +2,16 @@ package jwt
 
 import (
 	"errors"
-	"github.com/golang-jwt/jwt/v5"
 	"time"
+
+	"github.com/golang-jwt/jwt/v5"
 )
 
 // CustomClaims 自定义声明类型，内嵌 jwt.RegisteredClaims
 // RegisteredClaims 包含官方定义的标准字段：(iss, sub, aud, exp, nbf, iat, jti)
 // 我们这里增加了自定义字段 UserID 和 Username
 type CustomClaims struct {
-	UserId   int64  `json:"userId"`
+	UserId string `json:"userId"`
 	Username string `json:"username"`
 	jwt.RegisteredClaims
 }

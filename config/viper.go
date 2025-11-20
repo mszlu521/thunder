@@ -141,7 +141,7 @@ func InitConfig() {
 	workDir, _ := os.Getwd()
 	viper.SetConfigName("config")
 	viper.SetConfigType("yml")
-	viper.AddConfigPath(workDir + "/app/etc")
+	viper.AddConfigPath(workDir + "/etc")
 	err := viper.ReadInConfig()
 	if err != nil {
 		panic(err)

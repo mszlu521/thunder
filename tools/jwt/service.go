@@ -13,7 +13,7 @@ func GenerateToken(claims CustomClaims, expirationTime time.Duration) (string, e
 	return _jwt.GenerateToken(claims, expirationTime)
 }
 
-func GenToken(userId int64, username string, expirationTime time.Duration) (string, error) {
+func GenToken(userId string, username string, expirationTime time.Duration) (string, error) {
 	claims := CustomClaims{
 		UserId:   userId,
 		Username: username,
