@@ -1,7 +1,6 @@
 package req
 
 import (
-	"log"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -14,7 +13,7 @@ import (
 func JsonParam(c *gin.Context, obj any) error {
 	err := c.ShouldBindJSON(obj)
 	if err != nil {
-		logs.Errorf("req parse param err : %v", err)
+		logs.Errorf("req parse json param err : %v", err)
 		res.Error(c, errs.ErrParam)
 		return errs.ErrParam
 	}
@@ -24,6 +23,8 @@ func JsonParam(c *gin.Context, obj any) error {
 func QueryParam(c *gin.Context, obj any) error {
 	err := c.ShouldBindQuery(obj)
 	if err != nil {
+		logs.Errorf("req parse query param err : %v", err)
+		res.Error(c, errs.ErrParam)
 		return errs.ErrParam
 	}
 	return nil
@@ -31,7 +32,7 @@ func QueryParam(c *gin.Context, obj any) error {
 func XMLParam(ctx *gin.Context, obj any) error {
 	err := ctx.ShouldBindBodyWithXML(obj)
 	if err != nil {
-		log.Println(err)
+		logs.Errorf("req parse xml param err : %v", err)
 		return errs.ErrParam
 	}
 	return nil

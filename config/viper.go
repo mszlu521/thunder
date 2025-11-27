@@ -24,8 +24,20 @@ type Config struct {
 	Auth   Auth      `mapstructure:"auth"`
 	Wx     Wx        `mapstructure:"wx"`
 	Jwt    Jwt       `mapstructure:"jwt"`
+	Email Email `mapstructure:"email"`
 	Log    LogConfig `mapstructure:"log"`
 }
+
+type Email struct {
+	Host     string `mapstructure:"host"`
+	Port     int    `mapstructure:"port"`
+	Username string `mapstructure:"username"`
+	Password string `mapstructure:"password"`
+	Identity string `mapstructure:"identity"`
+	From     string `mapstructure:"from"`
+	BaseURL  string `mapstructure:"baseUrl"`
+}
+
 type Jwt struct {
 	Secret  string        `mapstructure:"secret"`
 	Expire  time.Duration `mapstructure:"expire"`
