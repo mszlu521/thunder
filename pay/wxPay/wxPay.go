@@ -24,8 +24,23 @@ type PayBody struct {
 	ClientIp    string  `json:"clientIp"`
 }
 
-func Init(pay config.WxPay) {
-	client, err := wechat.NewClientV3(pay.MchId, pay.MchSerialNo, pay.ApiV3Key, pay.PrivateKey)
+func Init(pay *config.WxPay) {
+	if pay == nil {
+		return
+	}
+	if pay.MchId == nil {
+		panic("WxPay mchId is nil")
+	}
+	if pay.MchSerialNo == nil {
+		panic("WxPay appId is nil")
+	}
+	if pay.ApiV3Key == nil {
+		panic("WxPay apiV3Key is nil")
+	}
+	if pay.PrivateKey == nil {
+		panic("WxPay privateKey is nil")
+	}
+	client, err := wechat.NewClientV3(*pay.MchId, *pay.MchSerialNo, *pay.ApiV3Key, *pay.PrivateKey)
 	if err != nil {
 		panic(err)
 	}
@@ -42,14 +57,21 @@ func Init(pay config.WxPay) {
 }
 
 func Native(ctx context.Context, body *PayBody) (string, error) {
-	pay := config.GetConfig().Pay.WxPay
+	conf := config.GetConfig()
+	if conf.Pay == nil {
+		panic("WxPay config is required")
+	}
+	pay := conf.Pay.WxPay
+	if pay == nil {
+		return "", errors.New("WxPay config is required")
+	}
 	bm := make(gopay.BodyMap)
-	bm.Set("appid", pay.AppId).
-		Set("mchid", pay.MchId).
+	bm.Set("appid", pay.GetAppId()).
+		Set("mchid", pay.GetMchId()).
 		Set("description", body.Description).
 		Set("out_trade_no", body.OutTradeNo).
 		Set("time_expire", body.TimeExpire).
-		Set("notify_url", pay.NotifyUrl).
+		Set("notify_url", pay.GetNotifyUrl()).
 		SetBodyMap("amount", func(bm gopay.BodyMap) {
 			bm.Set("total", body.Amount).
 				Set("currency", "CNY")
@@ -62,14 +84,22 @@ func Native(ctx context.Context, body *PayBody) (string, error) {
 }
 
 func JsApi(ctx context.Context, body *PayBody) (*wechat.JSAPIPayParams, error) {
-	pay := config.GetConfig().Pay.WxPay
+	conf := config.GetConfig()
+	if conf.Pay == nil {
+		panic("WxPay config is required")
+	}
+	pay := conf.Pay.WxPay
+	if pay == nil {
+		return nil, errors.New("WxPay config is required")
+	}
+
 	bm := make(gopay.BodyMap)
-	bm.Set("appid", pay.AppId).
-		Set("mchid", pay.MchId).
+	bm.Set("appid", pay.GetAppId()).
+		Set("mchid", pay.GetMchId()).
 		Set("description", body.Description).
 		Set("out_trade_no", body.OutTradeNo).
 		Set("time_expire", body.TimeExpire).
-		Set("notify_url", pay.NotifyUrl).
+		Set("notify_url", pay.GetNotifyUrl()).
 		SetBodyMap("amount", func(bm gopay.BodyMap) {
 			bm.Set("total", body.Amount).
 				Set("currency", "CNY")
@@ -82,7 +112,7 @@ func JsApi(ctx context.Context, body *PayBody) (*wechat.JSAPIPayParams, error) {
 		return nil, err
 	}
 	if rsp.Code == 0 {
-		jsapi, err := instance.Client.PaySignOfJSAPI(pay.AppId, rsp.Response.PrepayId)
+		jsapi, err := instance.Client.PaySignOfJSAPI(pay.GetAppId(), rsp.Response.PrepayId)
 		if err != nil {
 			return nil, err
 		}
@@ -90,15 +120,24 @@ func JsApi(ctx context.Context, body *PayBody) (*wechat.JSAPIPayParams, error) {
 	}
 	return nil, errors.New("fail")
 }
+
 func H5Pay(ctx context.Context, body *PayBody) (string, error) {
-	pay := config.GetConfig().Pay.WxPay
+	conf := config.GetConfig()
+	if conf.Pay == nil {
+		panic("WxPay config is required")
+	}
+	pay := conf.Pay.WxPay
+	if pay == nil {
+		return "", errors.New("WxPay config is required")
+	}
+
 	bm := make(gopay.BodyMap)
-	bm.Set("appid", pay.AppId).
-		Set("mchid", pay.MchId).
+	bm.Set("appid", pay.GetAppId()).
+		Set("mchid", pay.GetMchId()).
 		Set("description", body.Description).
 		Set("out_trade_no", body.OutTradeNo).
 		Set("time_expire", body.TimeExpire).
-		Set("notify_url", pay.NotifyUrl).
+		Set("notify_url", pay.GetNotifyUrl()).
 		SetBodyMap("amount", func(bm gopay.BodyMap) {
 			bm.Set("total", body.Amount).
 				Set("currency", "CNY")

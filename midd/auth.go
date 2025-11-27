@@ -2,17 +2,18 @@ package midd
 
 import (
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/mszlu521/thunder/config"
-	"github.com/mszlu521/thunder/tools/jwt"
 	"net/http"
 	"regexp"
 	"strings"
+
+	"github.com/gin-gonic/gin"
+	"github.com/mszlu521/thunder/config"
+	"github.com/mszlu521/thunder/tools/jwt"
 )
 
-func Auth(authConf config.Auth) gin.HandlerFunc {
+func Auth(authConf *config.Auth) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		for _, pattern := range authConf.Ignores {
+		for _, pattern := range authConf.GetIgnores() {
 			if isMatch(c.Request.URL.Path, pattern) {
 				c.Next()
 				return

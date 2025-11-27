@@ -9,16 +9,20 @@ var (
 	_db *db.MySQL
 )
 
-func InitDB(mysqlConf config.Mysql) {
+func InitDB(mysqlConf *config.Mysql) {
+	if mysqlConf == nil {
+		return
+	}
+
 	m := db.MySQL{
-		Database:     mysqlConf.Database,
-		Host:         mysqlConf.Host,
-		MaxIdleConns: mysqlConf.MaxIdleConns,
-		MaxOpenConns: mysqlConf.MaxOpenConns,
-		Password:     mysqlConf.Password,
-		Port:         mysqlConf.Port,
-		Username:     mysqlConf.User,
-		PingTimeout:  mysqlConf.PingTimeout,
+		Database:     mysqlConf.GetDatabase(),
+		Host:         mysqlConf.GetHost(),
+		MaxIdleConns: mysqlConf.GetMaxIdleConns(),
+		MaxOpenConns: mysqlConf.GetMaxOpenConns(),
+		Password:     mysqlConf.GetPassword(),
+		Port:         mysqlConf.GetPort(),
+		Username:     mysqlConf.GetUser(),
+		PingTimeout:  mysqlConf.GetPingTimeout(),
 	}
 	err := m.Init()
 	if err != nil {

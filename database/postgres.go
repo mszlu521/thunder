@@ -9,17 +9,21 @@ var (
 	_pg *db.Postgres
 )
 
-func InitPostgres(pgConf config.Postgres) {
+func InitPostgres(pgConf *config.Postgres) {
+	if pgConf == nil {
+		return
+	}
+
 	p := db.Postgres{
-		Database:     pgConf.Database,
-		Host:         pgConf.Host,
-		MaxIdleConns: pgConf.MaxIdleConns,
-		MaxOpenConns: pgConf.MaxOpenConns,
-		Password:     pgConf.Password,
-		Port:         pgConf.Port,
-		Username:     pgConf.User,
-		SSLMode:      pgConf.SSLMode,
-		PingTimeout:  pgConf.PingTimeout,
+		Database:     pgConf.GetDatabase(),
+		Host:         pgConf.GetHost(),
+		MaxIdleConns: pgConf.GetMaxIdleConns(),
+		MaxOpenConns: pgConf.GetMaxOpenConns(),
+		Password:     pgConf.GetPassword(),
+		Port:         pgConf.GetPort(),
+		Username:     pgConf.GetUser(),
+		SSLMode:      pgConf.GetSSLMode(),
+		PingTimeout:  pgConf.GetPingTimeout(),
 	}
 	err := p.Init()
 	if err != nil {

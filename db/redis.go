@@ -12,15 +12,15 @@ type Redis struct {
 	Client  *redis.Client
 }
 
-func (r *Redis) Init(redisConf config.Redis) {
+func (r *Redis) Init(redisConf *config.Redis) {
 	if r.Options == nil {
 		r.Options = &redis.Options{
-			Addr:           redisConf.Addr,
-			DB:             redisConf.DB,
-			Password:       redisConf.Password,
-			PoolSize:       redisConf.PoolSize,
-			MaxIdleConns:   redisConf.MaxIdleConns,
-			MaxActiveConns: redisConf.MaxOpenConns,
+			Addr:         redisConf.GetAddr(),
+			DB:           redisConf.GetDB(),
+			Password:     redisConf.GetPassword(),
+			PoolSize:     redisConf.GetPoolSize(),
+			MaxIdleConns: redisConf.GetMaxIdleConns(),
+			MaxActiveConns: redisConf.GetMaxOpenConns(),
 		}
 	}
 	rdb := redis.NewClient(r.Options)

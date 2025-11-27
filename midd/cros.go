@@ -1,13 +1,14 @@
 package midd
 
 import (
-	"github.com/gin-gonic/gin"
-	"github.com/mszlu521/thunder/config"
 	"net/http"
 	"strings"
+
+	"github.com/gin-gonic/gin"
+	"github.com/mszlu521/thunder/config"
 )
 
-func Cors(conf config.Server) gin.HandlerFunc {
+func Cors(conf *config.Server) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		origin := c.Request.Header.Get("Origin")
 		allowedOrigin, ok := isOriginAllowed(origin, conf.Cros)

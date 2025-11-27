@@ -25,11 +25,19 @@ type Server struct {
 
 // NewServer 创建一个新的 Server 实例
 func NewServer(conf *config.Config) *Server {
+	if conf.Server == nil {
+		panic("Server config is required ")
+	}
 	// 根据配置设置 Gin 模式
-	gin.SetMode(conf.Server.Mode)
+	gin.SetMode(conf.Server.GetMode())
 
 	// 初始化微信支付
-	wxPay.Init(conf.Pay.WxPay)
+	if conf.Pay != nil {
+		wxPayConfig := conf.Pay.WxPay
+		if wxPayConfig != nil {
+			wxPay.Init(wxPayConfig)
+		}
+	}
 
 	engine := gin.Default() // 使用默认的中间件 (Logger, Recovery)
 	//自定义的一些中间件，可通过配置文件开启，减少代码重复书写
@@ -54,9 +62,9 @@ func (s *Server) RegisterRouters(event event.IEvent, routers ...IRouter) {
 // Start 启动服务并实现优雅启停
 func (s *Server) Start() {
 	// 从配置中获取服务器地址和超时设置
-	address := fmt.Sprintf("%s:%d", s.conf.Server.Host, s.conf.Server.Port)
-	readTimeout := s.conf.Server.ReadTimeout * time.Second
-	writeTimeout := s.conf.Server.WriteTimeout * time.Second
+	address := fmt.Sprintf("%s:%d", s.conf.Server.GetHost(), s.conf.Server.GetPort())
+	readTimeout := s.conf.Server.GetReadTimeout()
+	writeTimeout := s.conf.Server.GetWriteTimeout()
 
 	s.httpServer = &http.Server{
 		Addr:         address,

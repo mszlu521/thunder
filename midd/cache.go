@@ -4,12 +4,15 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+
 	"github.com/gin-gonic/gin"
 	"github.com/mszlu521/thunder/cache"
 	"github.com/mszlu521/thunder/config"
 	"github.com/mszlu521/thunder/logs"
 	"github.com/mszlu521/thunder/res"
 	"github.com/mszlu521/thunder/tools/crypro"
+	"github.com/mszlu521/thunder/tools/gptr"
+
 	"io"
 	"net/http"
 	"time"
@@ -27,11 +30,11 @@ func (w *CustomResponseWriter) Write(p []byte) (n int, err error) {
 	// 使用 gin 原有的 ResponseWriter 将数据写回客户端
 	return w.ResponseWriter.Write(p)
 }
-func Cache(cacheConfig config.Cache) gin.HandlerFunc {
+func Cache(cacheConfig *config.Cache) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		//打印超时时间
 		start := time.Now()
-		for _, pattern := range cacheConfig.NeedCache {
+		for _, pattern := range cacheConfig.GetNeedCache() {
 			if isMatch(c.Request.URL.Path, pattern) {
 				//对数据进行缓存
 				if c.Request.Method == http.MethodPost {
@@ -68,10 +71,10 @@ func Cache(cacheConfig config.Cache) gin.HandlerFunc {
 							logs.Errorf("cache json Unmarshal err: %v", err)
 						} else {
 							if result.Code == res.OK {
-								if cacheConfig.Expire == 0 {
-									cacheConfig.Expire = 5 * 60 //默认5分钟
+								if cacheConfig.Expire == nil {
+									cacheConfig.Expire = gptr.Of(int64(5 * 60)) //默认5分钟
 								}
-								err := redisCache.Set(cacheKey, string(responseBody.Bytes()), cacheConfig.Expire)
+								err := redisCache.Set(cacheKey, string(responseBody.Bytes()), cacheConfig.GetExpire())
 								if err != nil {
 									logs.Errorf("cache redisCache.Set err: %v", err)
 								}

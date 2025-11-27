@@ -3,7 +3,6 @@ package logs
 import (
 	"context"
 	"fmt"
-	"github.com/mszlu521/thunder/config"
 	"io"
 	"log"
 	"log/slog"
@@ -12,6 +11,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/mszlu521/thunder/config"
 )
 
 // 定义一个私有的全局 logger 实例
@@ -155,10 +156,13 @@ func formatValue(v slog.Value) string {
 
 // Init 初始化全局日志记录器
 // 这是应用启动时应该调用的第一个函数
-func Init(c config.LogConfig) {
+func Init(c *config.LogConfig) {
+	if c == nil {
+		return
+	}
 	var level slog.Level
 	// 解析日志级别字符串
-	switch c.Level {
+	switch c.GetLevel() {
 	case "debug":
 		level = slog.LevelDebug
 	case "info":
@@ -171,7 +175,7 @@ func Init(c config.LogConfig) {
 		level = slog.LevelInfo // 默认为 info
 	}
 	opts := &slog.HandlerOptions{
-		AddSource: c.AddSource,
+		AddSource: c.GetAddSource(),
 		Level:     level,
 	}
 
@@ -182,9 +186,9 @@ func Init(c config.LogConfig) {
 	}
 
 	// 选择日志格式
-	if c.Format == "json" {
+	if c.GetFormat() == "json" {
 		handler = slog.NewJSONHandler(output, opts)
-	} else if c.Format == "pretty" {
+	} else if c.GetFormat() == "pretty" {
 		// 使用我们自定义的美化处理器
 		handler = &prettyHandler{opts: *opts, w: output}
 	} else {

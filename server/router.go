@@ -12,13 +12,19 @@ type IRouter interface {
 }
 
 func UseCustomMidd(conf *config.Config, engin *gin.Engine) {
-	if len(conf.Server.Cros) > 0 {
-		engin.Use(midd.Cors(conf.Server))
+	if conf.Server != nil {
+		if len(conf.Server.GetCros()) > 0 {
+			engin.Use(midd.Cors(conf.Server))
+		}
 	}
-	if conf.Auth.IsAuth {
-		engin.Use(midd.Auth(conf.Auth))
+	if conf.Auth != nil {
+		if conf.Auth.GetIsAuth() {
+			engin.Use(midd.Auth(conf.Auth))
+		}
 	}
-	if len(conf.Cache.NeedCache) > 0 {
-		engin.Use(midd.Cache(conf.Cache))
+	if conf.Cache != nil {
+		if len(conf.Cache.GetNeedCache()) > 0 {
+			engin.Use(midd.Cache(conf.Cache))
+		}
 	}
 }
