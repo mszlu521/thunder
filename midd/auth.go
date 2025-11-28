@@ -13,6 +13,9 @@ import (
 
 func Auth(authConf *config.Auth) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		if authConf.IsAuth == nil || !*authConf.IsAuth {
+			return
+		}
 		for _, pattern := range authConf.GetIgnores() {
 			if isMatch(c.Request.URL.Path, pattern) {
 				c.Next()
