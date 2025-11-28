@@ -355,19 +355,6 @@ func (w *WxPay) GetNotifyUrl() string {
 	return *w.NotifyUrl
 }
 
-func (c *Config) GetDB() *DB {
-	if c == nil {
-		return nil
-	}
-	return c.DB
-}
-
-func (d *DB) GetPostgres() *Postgres {
-	if d == nil {
-		return nil
-	}
-	return d.Postgres
-}
 
 func (p *Postgres) GetHost() string {
 	if p == nil || p.Host == nil {
@@ -430,13 +417,6 @@ func (p *Postgres) GetMaxOpenConns() int {
 		return 100
 	}
 	return *p.MaxOpenConns
-}
-
-func (d *DB) GetRedis() *Redis {
-	if d == nil {
-		return nil
-	}
-	return d.Redis
 }
 
 func (r *Redis) GetAddr() string {
