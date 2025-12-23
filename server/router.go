@@ -10,7 +10,10 @@ import (
 type IRouter interface {
 	Register(engine *gin.Engine)
 }
-
+type CloseIRouter interface {
+	IRouter
+	Close() error
+}
 func UseCustomMidd(conf *config.Config, engin *gin.Engine) {
 	if conf.Server != nil {
 		if len(conf.Server.GetCros()) > 0 {

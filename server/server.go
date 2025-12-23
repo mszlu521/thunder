@@ -21,6 +21,7 @@ type Server struct {
 	Engine     *gin.Engine
 	httpServer *http.Server
 	conf       *config.Config
+	Close func()
 }
 
 // NewServer 创建一个新的 Server 实例
@@ -50,13 +51,18 @@ func NewServer(conf *config.Config) *Server {
 
 // RegisterRouters 批量注册路由
 // 参数是实现了 IRouter 接口的实例
-func (s *Server) RegisterRouters(event event.IEvent, routers ...IRouter) {
+func (s *Server) RegisterRouters(event event.IEvent, routers ...IRouter) []func() error {
 	//注册 事件
 	event.Register()
+	var closeFuncs []func() error
 	for _, r := range routers {
 		r.Register(s.Engine)
+		if closer, ok := r.(interface{ Close() error }); ok {
+			closeFuncs = append(closeFuncs, closer.Close)
+		}
 	}
 	log.Println("Routers registered successfully.")
+	return closeFuncs
 }
 
 // Start 启动服务并实现优雅启停
@@ -90,7 +96,9 @@ func (s *Server) Start() {
 	// 阻塞在此，直到接收到信号
 	<-quit
 	log.Println("Shutting down server...")
-
+	if s.Close != nil {
+		s.Close()
+	}
 	// 创建一个有5秒超时的 context
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
