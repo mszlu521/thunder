@@ -15,17 +15,19 @@ import (
 var conf = new(Config)
 
 type Config struct {
-	Pay    *Pay       `mapstructure:"pay"`
-	Server *Server    `mapstructure:"server"`
-	Cache  *Cache     `mapstructure:"cache"`
-	Upload *Upload    `mapstructure:"upload"`
-	Qiniu  *Qiniu     `mapstructure:"qiniu"`
-	DB     *DB        `mapstructure:"db"`
-	Auth   *Auth      `mapstructure:"auth"`
-	Wx     *Wx        `mapstructure:"wx"`
-	Jwt    *Jwt       `mapstructure:"jwt"`
-	Email  *Email     `mapstructure:"email"`
-	Log    *LogConfig `mapstructure:"log"`
+	Pay           *Pay           `mapstructure:"pay"`
+	Server        *Server        `mapstructure:"server"`
+	Cache         *Cache         `mapstructure:"cache"`
+	Upload        *Upload        `mapstructure:"upload"`
+	Qiniu         *Qiniu         `mapstructure:"qiniu"`
+	DB            *DB            `mapstructure:"db"`
+	Auth          *Auth          `mapstructure:"auth"`
+	Wx            *Wx            `mapstructure:"wx"`
+	Jwt           *Jwt           `mapstructure:"jwt"`
+	Email         *Email         `mapstructure:"email"`
+	Log           *LogConfig     `mapstructure:"log"`
+	Elasticsearch *Elasticsearch `mapstructure:"elasticsearch"`
+	Milvus        *Milvus        `mapstructure:"milvus"`
 }
 
 type Email struct {
@@ -138,8 +140,8 @@ type DB struct {
 
 type Server struct {
 	Port         *int           `mapstructure:"port"`
-	Cros         []string      `mapstructure:"cros"`
-	AllowOrigins []string      `mapstructure:"allowOrigins"`
+	Cros         []string       `mapstructure:"cros"`
+	AllowOrigins []string       `mapstructure:"allowOrigins"`
 	Mode         *string        `mapstructure:"mode"`
 	Name         *string        `mapstructure:"name"`
 	Version      *string        `mapstructure:"version"`
@@ -149,13 +151,13 @@ type Server struct {
 }
 
 type LogConfig struct {
-	Level      *string `mapstructure:"level"`
-	Format     *string `mapstructure:"format"`
-	AddSource  *bool   `mapstructure:"addSource"`
-	Filename   *string `mapstructure:"filename"`
-	MaxSize    *int    `mapstructure:"maxSize"`
-	MaxAge     *int    `mapstructure:"maxAge"`
-	MaxBackups *int    `mapstructure:"maxBackups"`
+	Level      *string   `mapstructure:"level"`
+	Format     *string   `mapstructure:"format"`
+	AddSource  *bool     `mapstructure:"addSource"`
+	Filename   *string   `mapstructure:"filename"`
+	MaxSize    *int      `mapstructure:"maxSize"`
+	MaxAge     *int      `mapstructure:"maxAge"`
+	MaxBackups *int      `mapstructure:"maxBackups"`
 	Output     io.Writer `mapstructure:"output"`
 }
 
@@ -231,7 +233,7 @@ type Mysql struct {
 
 type Cache struct {
 	NeedCache []string `mapstructure:"needCache"`
-	Expire *int64 `mapstructure:"expire"` //单位秒
+	Expire    *int64   `mapstructure:"expire"` //单位秒
 }
 
 func (c *Cache) GetExpire() int64 {
@@ -268,7 +270,7 @@ type Aliyun struct {
 }
 
 type Auth struct {
-	IsAuth *bool `mapstructure:"isAuth"`
+	IsAuth     *bool    `mapstructure:"isAuth"`
 	Ignores    []string `mapstructure:"ignores"`
 	NeedLogins []string `mapstructure:"needLogins"`
 }
@@ -290,6 +292,86 @@ type Postgres struct {
 	MaxIdleConns *int           `mapstructure:"maxIdleConns"`
 	PingTimeout  *time.Duration `mapstructure:"pingTimeout"`
 	MaxOpenConns *int           `mapstructure:"maxOpenConns"`
+}
+
+// Elasticsearch 配置结构体
+type Elasticsearch struct {
+	Addresses []string `mapstructure:"addresses"`
+	Username  *string  `mapstructure:"username"`
+	Password  *string  `mapstructure:"password"`
+	APIKey    *string  `mapstructure:"apiKey"`
+}
+
+// GetAddresses 获取 ES 地址列表
+func (e *Elasticsearch) GetAddresses() []string {
+	if e == nil || len(e.Addresses) == 0 {
+		return []string{"http://localhost:9200"}
+	}
+	return e.Addresses
+}
+
+// GetUsername 获取 ES 用户名
+func (e *Elasticsearch) GetUsername() string {
+	if e == nil || e.Username == nil {
+		return ""
+	}
+	return *e.Username
+}
+
+// GetPassword 获取 ES 密码
+func (e *Elasticsearch) GetPassword() string {
+	if e == nil || e.Password == nil {
+		return ""
+	}
+	return *e.Password
+}
+
+// GetAPIKey 获取 ES API Key
+func (e *Elasticsearch) GetAPIKey() string {
+	if e == nil || e.APIKey == nil {
+		return ""
+	}
+	return *e.APIKey
+}
+
+// Milvus 配置结构体
+type Milvus struct {
+	Address  *string `mapstructure:"address"`
+	DBName   *string `mapstructure:"dbName"`
+	Username *string `mapstructure:"username"`
+	Password *string `mapstructure:"password"`
+}
+
+// GetAddress 获取 Milvus 地址
+func (m *Milvus) GetAddress() string {
+	if m == nil || m.Address == nil {
+		return "localhost:19530"
+	}
+	return *m.Address
+}
+
+// GetDBName 获取 Milvus 数据库名称
+func (m *Milvus) GetDBName() string {
+	if m == nil || m.DBName == nil {
+		return ""
+	}
+	return *m.DBName
+}
+
+// GetUsername 获取 Milvus 用户名
+func (m *Milvus) GetUsername() string {
+	if m == nil || m.Username == nil {
+		return ""
+	}
+	return *m.Username
+}
+
+// GetPassword 获取 Milvus 密码
+func (m *Milvus) GetPassword() string {
+	if m == nil || m.Password == nil {
+		return ""
+	}
+	return *m.Password
 }
 
 func (s *Server) GetHost() string {
@@ -354,7 +436,6 @@ func (w *WxPay) GetNotifyUrl() string {
 	}
 	return *w.NotifyUrl
 }
-
 
 func (p *Postgres) GetHost() string {
 	if p == nil || p.Host == nil {
