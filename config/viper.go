@@ -20,6 +20,7 @@ type Config struct {
 	Cache         *Cache         `mapstructure:"cache"`
 	Upload        *Upload        `mapstructure:"upload"`
 	Qiniu         *Qiniu         `mapstructure:"qiniu"`
+	Aliyun        *Aliyun        `mapstructure:"aliyun"`
 	DB            *DB            `mapstructure:"db"`
 	Auth          *Auth          `mapstructure:"auth"`
 	Wx            *Wx            `mapstructure:"wx"`
@@ -547,6 +548,41 @@ func (c *Config) GetJwt() *Jwt {
 		return nil
 	}
 	return c.Jwt
+}
+
+func (c *Config) GetAliyun() *Aliyun {
+	if c == nil {
+		return nil
+	}
+	return c.Aliyun
+}
+
+func (a *Aliyun) GetAccessKeyID() string {
+	if a == nil || a.AccessKeyID == nil {
+		return ""
+	}
+	return *a.AccessKeyID
+}
+
+func (a *Aliyun) GetAccessKeySecret() string {
+	if a == nil || a.AccessKeySecret == nil {
+		return ""
+	}
+	return *a.AccessKeySecret
+}
+
+func (a *Aliyun) GetEndpoint() string {
+	if a == nil || a.Endpoint == nil {
+		return ""
+	}
+	return *a.Endpoint
+}
+
+func (a *Aliyun) GetBucket() string {
+	if a == nil || a.Bucket == nil {
+		return ""
+	}
+	return *a.Bucket
 }
 
 func (a *Auth) GetIsAuth() bool {
