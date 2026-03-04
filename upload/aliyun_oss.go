@@ -11,10 +11,13 @@ import (
 	"github.com/mszlu521/thunder/logs"
 )
 
-
 type AliyunOSSUpload struct {
-	client *oss.Client
-	bucket *oss.Bucket
+	client          *oss.Client
+	bucket          *oss.Bucket
+	accessKeyID     string
+	accessKeySecret string
+	endpoint        string
+	bucketName      string
 }
 
 // InitAliyunOSSUpload 初始化阿里云OSS上传管理器
@@ -22,28 +25,32 @@ func InitAliyunOSSUpload(accessKeyID, accessKeySecret, endpoint, bucketName stri
 	// 检查必要配置是否存在
 	if accessKeyID == "" || accessKeySecret == "" || endpoint == "" || bucketName == "" {
 		logs.Info("阿里云OSS配置不完整，跳过初始化")
-		return nil,errors.New("阿里云OSS配置不完整")
+		return nil, errors.New("阿里云OSS配置不完整")
 	}
-	
+
 	// 创建OSSClient实例
 	client, err := oss.New(endpoint, accessKeyID, accessKeySecret)
 	if err != nil {
 		logs.Errorf("创建阿里云OSS客户端失败: %v", err)
 		return nil, err
 	}
-	
+
 	// 获取存储空间
 	bucket, err := client.Bucket(bucketName)
 	if err != nil {
 		logs.Errorf("获取阿里云OSS存储空间失败: %v", err)
 		return nil, err
 	}
-	
+
 	aliyunOSSUploadManager := &AliyunOSSUpload{
-		client: client,
-		bucket: bucket,
+		client:          client,
+		bucket:          bucket,
+		accessKeyID:     accessKeyID,
+		accessKeySecret: accessKeySecret,
+		endpoint:        endpoint,
+		bucketName:      bucketName,
 	}
-	
+
 	logs.Info("阿里云OSS上传服务初始化成功")
 	return aliyunOSSUploadManager, nil
 }
@@ -53,14 +60,14 @@ func (a *AliyunOSSUpload) Upload(ctx context.Context, reader io.Reader, name str
 	if a == nil || a.bucket == nil {
 		return errors.New("no such bucket")
 	}
-	
+
 	// 直接使用PutObject上传
 	err := a.bucket.PutObject(name, reader)
 	if err != nil {
 		logs.Errorf("上传文件到阿里云OSS失败: %v", err)
 		return err
 	}
-	
+
 	return nil
 }
 
@@ -69,20 +76,20 @@ func (a *AliyunOSSUpload) UploadWithMetadata(ctx context.Context, reader io.Read
 	if a == nil || a.bucket == nil {
 		return errors.New("no such bucket")
 	}
-	
+
 	// 设置对象元数据
 	var options []oss.Option
 	for key, value := range metadata {
 		options = append(options, oss.Meta(key, value))
 	}
-	
+
 	// 上传对象
 	err := a.bucket.PutObject(name, reader, options...)
 	if err != nil {
 		logs.Errorf("上传文件到阿里云OSS失败: %v", err)
 		return err
 	}
-	
+
 	return nil
 }
 
@@ -91,7 +98,7 @@ func (a *AliyunOSSUpload) GetSignedURL(objectKey string, expiredInSec int64) (st
 	if a == nil || a.bucket == nil {
 		return "", errors.New("no such bucket")
 	}
-	
+
 	// 生成签名URL
 	signedURL, err := a.bucket.SignURL(objectKey, oss.HTTPGet, expiredInSec)
 	if err != nil {
@@ -106,13 +113,13 @@ func (a *AliyunOSSUpload) DeleteObject(objectKey string) error {
 	if a == nil || a.bucket == nil {
 		return errors.New("no such bucket")
 	}
-	
+
 	err := a.bucket.DeleteObject(objectKey)
 	if err != nil {
 		logs.Errorf("删除阿里云OSS对象失败: %v", err)
 		return err
 	}
-	
+
 	return nil
 }
 
@@ -122,21 +129,21 @@ func (a *AliyunOSSUpload) IsAvailable() bool {
 }
 
 // GetObjectURL 获取对象的访问URL
-func (a *AliyunOSSUpload) GetObjectURL(endpoint, bucketName, objectKey string) string {
+func (a *AliyunOSSUpload) GetObjectURL(objectKey string) string {
 	if a == nil || a.bucket == nil {
 		return ""
 	}
-	
+
 	// 处理endpoint，确保格式正确
-	if !strings.HasPrefix(endpoint, "http") {
-		endpoint = "https://" + endpoint
+	if !strings.HasPrefix(a.endpoint, "http") {
+		a.endpoint = "https://" + a.endpoint
 	}
-	
+
 	// 构造对象URL
-	objectURL := endpoint + "/" + bucketName + "/" + objectKey
+	objectURL := a.endpoint + "/" + a.bucketName + "/" + objectKey
 	return objectURL
 }
 
-func (a *AliyunOSSUpload) GetPublicUrl(bucket, endpoint, filename string) string {
-	return fmt.Sprintf("https://%s.%s/%s", bucket, endpoint, filename)
+func (a *AliyunOSSUpload) GetPublicUrl(filename string) string {
+	return fmt.Sprintf("https://%s.%s/%s", a.bucketName, a.endpoint, filename)
 }
