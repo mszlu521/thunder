@@ -91,7 +91,7 @@ func Path(ctx *gin.Context, paramKey string, value any) error {
 		res.Error(ctx, errs.ErrParam)
 		return errs.ErrParam
 	}
-	
+
 	return nil
 }
 
@@ -111,6 +111,15 @@ func PathInArray(ctx *gin.Context, method string, urls []string) bool {
 		}
 	}
 	return false
+}
+
+func GetUserIdString(ctx *gin.Context) (string, bool) {
+	value, exists := ctx.Get("userId")
+	if !exists {
+		res.Error(ctx, errs.ErrUnauthorized)
+		return "", false
+	}
+	return value.(string), true
 }
 
 func GetUserId(ctx *gin.Context) (int64, bool) {

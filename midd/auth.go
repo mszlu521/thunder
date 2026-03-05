@@ -38,6 +38,7 @@ func Auth(authConf *config.Auth) gin.HandlerFunc {
 			return
 		}
 		c.Set("userId", claims.UserId)
+		c.Set("claims", claims)
 		c.Next()
 	}
 }
