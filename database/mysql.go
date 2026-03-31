@@ -15,14 +15,19 @@ func InitDB(mysqlConf *config.Mysql) {
 	}
 
 	m := db.MySQL{
-		Database:     mysqlConf.GetDatabase(),
-		Host:         mysqlConf.GetHost(),
-		MaxIdleConns: mysqlConf.GetMaxIdleConns(),
-		MaxOpenConns: mysqlConf.GetMaxOpenConns(),
-		Password:     mysqlConf.GetPassword(),
-		Port:         mysqlConf.GetPort(),
-		Username:     mysqlConf.GetUser(),
-		PingTimeout:  mysqlConf.GetPingTimeout(),
+		Database:                  mysqlConf.GetDatabase(),
+		Host:                      mysqlConf.GetHost(),
+		MaxIdleConns:              mysqlConf.GetMaxIdleConns(),
+		MaxOpenConns:              mysqlConf.GetMaxOpenConns(),
+		Password:                  mysqlConf.GetPassword(),
+		Port:                      mysqlConf.GetPort(),
+		Username:                  mysqlConf.GetUser(),
+		PingTimeout:               mysqlConf.GetPingTimeout(),
+		SlowThreshold:             mysqlConf.GetLog().GetSlowThreshold(),
+		LogLevel:                  mysqlConf.GetLog().GetLogLevel(),
+		IgnoreRecordNotFoundError: mysqlConf.GetLog().GetIgnoreRecordNotFoundError(),
+		ParameterizedQueries:      mysqlConf.GetLog().GetParameterizedQueries(),
+		Colorful:                  mysqlConf.GetLog().GetColorful(),
 	}
 	err := m.Init()
 	if err != nil {

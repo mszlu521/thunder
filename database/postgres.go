@@ -15,15 +15,20 @@ func InitPostgres(pgConf *config.Postgres) {
 	}
 
 	p := db.Postgres{
-		Database:     pgConf.GetDatabase(),
-		Host:         pgConf.GetHost(),
-		MaxIdleConns: pgConf.GetMaxIdleConns(),
-		MaxOpenConns: pgConf.GetMaxOpenConns(),
-		Password:     pgConf.GetPassword(),
-		Port:         pgConf.GetPort(),
-		Username:     pgConf.GetUser(),
-		SSLMode:      pgConf.GetSSLMode(),
-		PingTimeout:  pgConf.GetPingTimeout(),
+		Database:                  pgConf.GetDatabase(),
+		Host:                      pgConf.GetHost(),
+		MaxIdleConns:              pgConf.GetMaxIdleConns(),
+		MaxOpenConns:              pgConf.GetMaxOpenConns(),
+		Password:                  pgConf.GetPassword(),
+		Port:                      pgConf.GetPort(),
+		Username:                  pgConf.GetUser(),
+		SSLMode:                   pgConf.GetSSLMode(),
+		PingTimeout:               pgConf.GetPingTimeout(),
+		SlowThreshold:             pgConf.GetLog().GetSlowThreshold(),
+		LogLevel:                  pgConf.GetLog().GetLogLevel(),
+		IgnoreRecordNotFoundError: pgConf.GetLog().GetIgnoreRecordNotFoundError(),
+		ParameterizedQueries:      pgConf.GetLog().GetParameterizedQueries(),
+		Colorful:                  pgConf.GetLog().GetColorful(),
 	}
 	err := p.Init()
 	if err != nil {

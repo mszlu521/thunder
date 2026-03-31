@@ -10,6 +10,7 @@ import (
 	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
+	"gorm.io/gorm/logger"
 )
 
 var conf = new(Config)
@@ -230,6 +231,15 @@ type Mysql struct {
 	MaxIdleConns *int           `mapstructure:"maxIdleConns"`
 	PingTimeout  *time.Duration `mapstructure:"pingTimeout"`
 	MaxOpenConns *int           `mapstructure:"maxOpenConns"`
+	Log          *MysqlLog      `mapstructure:"log"`
+}
+
+type MysqlLog struct {
+	SlowThreshold             *time.Duration `mapstructure:"slowThreshold"`
+	LogLevel                  *string        `mapstructure:"level"`
+	IgnoreRecordNotFoundError *bool          `mapstructure:"ignoreRecordNotFoundError"`
+	ParameterizedQueries      *bool          `mapstructure:"parameterizedQueries"`
+	Colorful                  *bool          `mapstructure:"colorful"`
 }
 
 type Cache struct {
@@ -293,6 +303,15 @@ type Postgres struct {
 	MaxIdleConns *int           `mapstructure:"maxIdleConns"`
 	PingTimeout  *time.Duration `mapstructure:"pingTimeout"`
 	MaxOpenConns *int           `mapstructure:"maxOpenConns"`
+	Log          *PostgresLog   `mapstructure:"log"`
+}
+
+type PostgresLog struct {
+	SlowThreshold             *time.Duration `mapstructure:"slowThreshold"`
+	LogLevel                  *string        `mapstructure:"level"`
+	IgnoreRecordNotFoundError *bool          `mapstructure:"ignoreRecordNotFoundError"`
+	ParameterizedQueries      *bool          `mapstructure:"parameterizedQueries"`
+	Colorful                  *bool          `mapstructure:"colorful"`
 }
 
 // Elasticsearch 配置结构体
@@ -499,6 +518,59 @@ func (p *Postgres) GetMaxOpenConns() int {
 		return 100
 	}
 	return *p.MaxOpenConns
+}
+
+func (p *Postgres) GetLog() *PostgresLog {
+	if p == nil || p.Log == nil {
+		return &PostgresLog{}
+	}
+	return p.Log
+}
+
+func (pl *PostgresLog) GetSlowThreshold() time.Duration {
+	if pl == nil || pl.SlowThreshold == nil {
+		return time.Second
+	}
+	return *pl.SlowThreshold
+}
+
+func (pl *PostgresLog) GetLogLevel() logger.LogLevel {
+	if pl == nil || pl.LogLevel == nil {
+		return logger.Info
+	}
+	switch *pl.LogLevel {
+	case "silent":
+		return logger.Silent
+	case "error":
+		return logger.Error
+	case "warn":
+		return logger.Warn
+	case "info":
+		return logger.Info
+	default:
+		return logger.Info
+	}
+}
+
+func (pl *PostgresLog) GetIgnoreRecordNotFoundError() bool {
+	if pl == nil || pl.IgnoreRecordNotFoundError == nil {
+		return true
+	}
+	return *pl.IgnoreRecordNotFoundError
+}
+
+func (pl *PostgresLog) GetParameterizedQueries() bool {
+	if pl == nil || pl.ParameterizedQueries == nil {
+		return true
+	}
+	return *pl.ParameterizedQueries
+}
+
+func (pl *PostgresLog) GetColorful() bool {
+	if pl == nil || pl.Colorful == nil {
+		return false
+	}
+	return *pl.Colorful
 }
 
 func (r *Redis) GetAddr() string {
@@ -744,4 +816,57 @@ func (m *Mysql) GetMaxOpenConns() int {
 		return 100
 	}
 	return *m.MaxOpenConns
+}
+
+func (m *Mysql) GetLog() *MysqlLog {
+	if m == nil || m.Log == nil {
+		return &MysqlLog{}
+	}
+	return m.Log
+}
+
+func (ml *MysqlLog) GetSlowThreshold() time.Duration {
+	if ml == nil || ml.SlowThreshold == nil {
+		return time.Second
+	}
+	return *ml.SlowThreshold
+}
+
+func (ml *MysqlLog) GetLogLevel() logger.LogLevel {
+	if ml == nil || ml.LogLevel == nil {
+		return logger.Info
+	}
+	switch *ml.LogLevel {
+	case "silent":
+		return logger.Silent
+	case "error":
+		return logger.Error
+	case "warn":
+		return logger.Warn
+	case "info":
+		return logger.Info
+	default:
+		return logger.Info
+	}
+}
+
+func (ml *MysqlLog) GetIgnoreRecordNotFoundError() bool {
+	if ml == nil || ml.IgnoreRecordNotFoundError == nil {
+		return true
+	}
+	return *ml.IgnoreRecordNotFoundError
+}
+
+func (ml *MysqlLog) GetParameterizedQueries() bool {
+	if ml == nil || ml.ParameterizedQueries == nil {
+		return true
+	}
+	return *ml.ParameterizedQueries
+}
+
+func (ml *MysqlLog) GetColorful() bool {
+	if ml == nil || ml.Colorful == nil {
+		return false
+	}
+	return *ml.Colorful
 }

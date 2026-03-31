@@ -12,16 +12,21 @@ import (
 )
 
 type MySQL struct {
-	GormConfig   *gorm.Config
-	Username     string
-	Password     string
-	Host         string
-	Port         int
-	Database     string
-	PingTimeout  time.Duration
-	MaxIdleConns int
-	MaxOpenConns int
-	GormDB       *gorm.DB
+	GormConfig              *gorm.Config
+	Username                string
+	Password                string
+	Host                    string
+	Port                    int
+	Database                string
+	PingTimeout             time.Duration
+	MaxIdleConns            int
+	MaxOpenConns            int
+	SlowThreshold           time.Duration
+	LogLevel                logger.LogLevel
+	IgnoreRecordNotFoundError bool
+	ParameterizedQueries    bool
+	Colorful                bool
+	GormDB                  *gorm.DB
 }
 
 func (m *MySQL) Init() error {
@@ -32,11 +37,11 @@ func (m *MySQL) Init() error {
 		newLogger := logger.New(
 			log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
 			logger.Config{
-				SlowThreshold:             time.Second, // Slow SQL threshold
-				LogLevel:                  logger.Info, // Log level
-				IgnoreRecordNotFoundError: true,        // Ignore ErrRecordNotFound error for logger
-				ParameterizedQueries:      true,        // Don't include params in the SQL logs
-				Colorful:                  false,       // Disable color
+				SlowThreshold:             m.SlowThreshold,
+				LogLevel:                  m.LogLevel,
+				IgnoreRecordNotFoundError: m.IgnoreRecordNotFoundError,
+				ParameterizedQueries:      m.ParameterizedQueries,
+				Colorful:                  m.Colorful,
 			},
 		)
 		m.GormConfig = &gorm.Config{
