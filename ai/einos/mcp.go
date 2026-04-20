@@ -13,35 +13,30 @@ import (
 )
 
 type McpConfig struct {
-	BaseUrl string
-	Token   string
-	Name    string
-	Version string
+	BaseUrl  string
+	Token    string
+	Name     string
+	Version  string
+	Endpoint string
+	Type     ToolType
+	Stdio    *Stdio
 }
 
+type Stdio struct {
+	Command string
+	Args    []string
+	env     []string
+}
+type ToolType string
+
+const (
+	ToolTypeSSE            ToolType = "mcp"
+	ToolTypeStreamableHttp ToolType = "streamableHttp"
+	ToolTypeStdio          ToolType = "stdio"
+)
+
 func GetEinoBaseTools(ctx context.Context, config *McpConfig) ([]tool.BaseTool, error) {
-	headers := make(map[string]string)
-	if config.Token != "" {
-		headers["Authorization"] = fmt.Sprintf("Bearer %s", config.Token)
-	}
-	options := transport.WithHeaders(headers)
-	cli, err := client.NewSSEMCPClient(config.BaseUrl, options)
-	if err != nil {
-		return nil, err
-	}
-	err = cli.Start(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	initRequest := mcp.InitializeRequest{}
-	initRequest.Params.ProtocolVersion = mcp.LATEST_PROTOCOL_VERSION
-	initRequest.Params.ClientInfo = mcp.Implementation{
-		Name:    config.Name,
-		Version: config.Version,
-	}
-
-	_, err = cli.Initialize(ctx, initRequest)
+	cli, err := buildCli(ctx, config)
 	if err != nil {
 		return nil, err
 	}
@@ -49,17 +44,31 @@ func GetEinoBaseTools(ctx context.Context, config *McpConfig) ([]tool.BaseTool, 
 	if err != nil {
 		return nil, err
 	}
-
 	return tools, nil
 }
 
-func GetMCPTool(ctx context.Context, config *McpConfig) ([]mcp.Tool, error) {
+func buildCli(ctx context.Context, config *McpConfig) (*client.Client, error) {
+	if config.Type == "" {
+		return nil, fmt.Errorf("type is empty")
+	}
 	headers := make(map[string]string)
 	if config.Token != "" {
 		headers["Authorization"] = fmt.Sprintf("Bearer %s", config.Token)
 	}
-	options := transport.WithHeaders(headers)
-	cli, err := client.NewSSEMCPClient(config.BaseUrl, options)
+	var cli *client.Client
+	var err error
+	if config.Type == ToolTypeSSE {
+		options := transport.WithHeaders(headers)
+		cli, err = client.NewSSEMCPClient(config.BaseUrl, options)
+	} else if config.Type == ToolTypeStreamableHttp {
+		options := transport.WithHTTPHeaders(headers)
+		cli, err = client.NewStreamableHttpClient(config.BaseUrl, options)
+	} else {
+		if config.Stdio == nil {
+			return nil, fmt.Errorf("stdio is empty")
+		}
+		cli, err = client.NewStdioMCPClient(config.Stdio.Command, config.Stdio.env, config.Stdio.Args...)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -76,6 +85,14 @@ func GetMCPTool(ctx context.Context, config *McpConfig) ([]mcp.Tool, error) {
 	}
 
 	_, err = cli.Initialize(ctx, initRequest)
+	if err != nil {
+		return nil, err
+	}
+	return cli, nil
+}
+
+func GetMCPTool(ctx context.Context, config *McpConfig) ([]mcp.Tool, error) {
+	cli, err := buildCli(ctx, config)
 	if err != nil {
 		return nil, err
 	}
@@ -88,30 +105,9 @@ func GetMCPTool(ctx context.Context, config *McpConfig) ([]mcp.Tool, error) {
 }
 
 func GetMCPToolAndCli(ctx context.Context, config *McpConfig) ([]mcp.Tool, *client.Client, error) {
-	headers := make(map[string]string)
-	if config.Token != "" {
-		headers["Authorization"] = fmt.Sprintf("Bearer %s", config.Token)
-	}
-	options := transport.WithHeaders(headers)
-	cli, err := client.NewSSEMCPClient(config.BaseUrl, options)
+	cli, err := buildCli(ctx, config)
 	if err != nil {
-		return nil, nil, err
-	}
-	err = cli.Start(ctx)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	initRequest := mcp.InitializeRequest{}
-	initRequest.Params.ProtocolVersion = mcp.LATEST_PROTOCOL_VERSION
-	initRequest.Params.ClientInfo = mcp.Implementation{
-		Name:    config.Name,
-		Version: config.Version,
-	}
-
-	_, err = cli.Initialize(ctx, initRequest)
-	if err != nil {
-		return nil, nil, err
+		return nil, cli, err
 	}
 	tools, err := cli.ListTools(ctx, mcp.ListToolsRequest{})
 	if err != nil {
