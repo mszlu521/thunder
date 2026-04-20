@@ -30,7 +30,7 @@ type Stdio struct {
 type ToolType string
 
 const (
-	ToolTypeSSE            ToolType = "mcp"
+	ToolTypeSSE            ToolType = "sse"
 	ToolTypeStreamableHttp ToolType = "streamableHttp"
 	ToolTypeStdio          ToolType = "stdio"
 )
