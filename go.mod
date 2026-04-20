@@ -21,7 +21,7 @@ require (
 	github.com/cloudwego/eino-ext/components/model/openai v0.1.1
 	github.com/cloudwego/eino-ext/components/model/qianfan v0.1.2
 	github.com/cloudwego/eino-ext/components/model/qwen v0.1.2
-	github.com/cloudwego/eino-ext/components/tool/mcp v0.0.7
+	github.com/cloudwego/eino-ext/components/tool/mcp v0.0.8
 	github.com/fsnotify/fsnotify v1.7.0
 	github.com/gin-gonic/gin v1.10.0
 	github.com/go-pay/gopay v1.5.106

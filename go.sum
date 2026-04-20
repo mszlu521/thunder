@@ -114,6 +114,8 @@ github.com/cloudwego/eino-ext/components/model/qwen v0.1.2 h1:9eJ4JhA53roYBr8c29
 github.com/cloudwego/eino-ext/components/model/qwen v0.1.2/go.mod h1:F2PzpkDaGNhRiq4n42uAAex/FBWIGwZ7gc1HaoZEeYo=
 github.com/cloudwego/eino-ext/components/tool/mcp v0.0.7 h1:CvrZVB6agp/jOXWtdyqHW4w0b9KEhXh0KWbGQ9iWQFI=
 github.com/cloudwego/eino-ext/components/tool/mcp v0.0.7/go.mod h1:zxP8sFkADBqflNc0a4qfKdLYQ+edzHPlkOaZF0A1X7o=
+github.com/cloudwego/eino-ext/components/tool/mcp v0.0.8 h1:/QwCVAtB61b4Q2+RUvhoy9AZNkhiThsTySIoimxiJS4=
+github.com/cloudwego/eino-ext/components/tool/mcp v0.0.8/go.mod h1:zxP8sFkADBqflNc0a4qfKdLYQ+edzHPlkOaZF0A1X7o=
 github.com/cloudwego/eino-ext/libs/acl/openai v0.1.2 h1:r9Id2wzJ05PoHl+Km7jQgNMgciaZI93TVnUYso89esM=
 github.com/cloudwego/eino-ext/libs/acl/openai v0.1.2/go.mod h1:S4OkvglPY9hsm9tXeShODrf/WN1Cgu4bqu4nn/CnIic=
 github.com/cloudwego/gopkg v0.1.4 h1:EoQiCG4sTonTPHxOGE0VlQs+sQR+Hsi2uN0qqwu8O50=

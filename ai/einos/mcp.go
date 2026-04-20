@@ -55,14 +55,15 @@ func buildCli(ctx context.Context, config *McpConfig) (*client.Client, error) {
 	if config.Token != "" {
 		headers["Authorization"] = fmt.Sprintf("Bearer %s", config.Token)
 	}
+	var url = config.BaseUrl + config.Endpoint
 	var cli *client.Client
 	var err error
 	if config.Type == ToolTypeSSE {
 		options := transport.WithHeaders(headers)
-		cli, err = client.NewSSEMCPClient(config.BaseUrl, options)
+		cli, err = client.NewSSEMCPClient(url, options)
 	} else if config.Type == ToolTypeStreamableHttp {
 		options := transport.WithHTTPHeaders(headers)
-		cli, err = client.NewStreamableHttpClient(config.BaseUrl, options)
+		cli, err = client.NewStreamableHttpClient(url, options)
 	} else {
 		if config.Stdio == nil {
 			return nil, fmt.Errorf("stdio is empty")
