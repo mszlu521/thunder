@@ -15,6 +15,9 @@ import (
 
 var conf = new(Config)
 
+// v 保存 viper 实例，用于支持自定义配置查询
+var v *viper.Viper
+
 type Config struct {
 	Pay           *Pay           `mapstructure:"pay"`
 	Server        *Server        `mapstructure:"server"`
@@ -30,6 +33,18 @@ type Config struct {
 	Log           *LogConfig     `mapstructure:"log"`
 	Elasticsearch *Elasticsearch `mapstructure:"elasticsearch"`
 	Milvus        *Milvus        `mapstructure:"milvus"`
+	Skill         *Skill         `mapstructure:"skill"`
+}
+
+type Skill struct {
+	BaseDir *string `mapstructure:"baseDir"`
+}
+
+func (s *Skill) GetBaseDir() string {
+	if s == nil || s.BaseDir == nil {
+		return "./skills"
+	}
+	return *s.BaseDir
 }
 
 type Email struct {
@@ -752,6 +767,11 @@ func Init() *viper.Viper {
 	return v
 }
 
+// SetViper 允许外部设置 viper 实例（主要用于测试）
+func SetViper(viperInstance *viper.Viper) {
+	v = viperInstance
+}
+
 // GetConfig 返回已加载的配置单例
 // 在调用此函数前，必须先调用 Init()
 func GetConfig() *Config {
@@ -760,6 +780,71 @@ func GetConfig() *Config {
 		panic("config not initialized, please call config.Init() first")
 	}
 	return conf
+}
+
+// GetViper 返回 viper 实例，用于自定义配置查询
+func GetViper() *viper.Viper {
+	if v == nil {
+		panic("config not initialized, please call config.Init() first")
+	}
+	return v
+}
+
+// GetString 获取指定 key 的字符串配置值，支持自定义配置
+// key 支持点号分隔的路径，如 "myapp.timeout"
+func GetString(key string) string {
+	return GetViper().GetString(key)
+}
+
+// GetInt 获取指定 key 的整数配置值，支持自定义配置
+func GetInt(key string) int {
+	return GetViper().GetInt(key)
+}
+
+// GetBool 获取指定 key 的布尔配置值，支持自定义配置
+func GetBool(key string) bool {
+	return GetViper().GetBool(key)
+}
+
+// GetFloat64 获取指定 key 的浮点数配置值，支持自定义配置
+func GetFloat64(key string) float64 {
+	return GetViper().GetFloat64(key)
+}
+
+// GetStringSlice 获取指定 key 的字符串切片配置值，支持自定义配置
+func GetStringSlice(key string) []string {
+	return GetViper().GetStringSlice(key)
+}
+
+// GetStringMap 获取指定 key 的 map 配置值，支持自定义配置
+func GetStringMap(key string) map[string]any {
+	return GetViper().GetStringMap(key)
+}
+
+// GetStringMapString 获取指定 key 的 map[string]string 配置值，支持自定义配置
+func GetStringMapString(key string) map[string]string {
+	return GetViper().GetStringMapString(key)
+}
+
+// GetDuration 获取指定 key 的 Duration 配置值，支持自定义配置
+func GetDuration(key string) time.Duration {
+	return GetViper().GetDuration(key)
+}
+
+// IsSet 检查指定 key 是否已设置，支持自定义配置
+func IsSet(key string) bool {
+	return GetViper().IsSet(key)
+}
+
+// UnmarshalKey 将指定 key 的配置反序列化到用户自定义结构体
+// 例如: config.UnmarshalKey("myapp", &myConfig)
+func UnmarshalKey(key string, rawVal any) error {
+	return GetViper().UnmarshalKey(key, rawVal)
+}
+
+// Unmarshal 将整个配置反序列化到用户自定义结构体
+func Unmarshal(rawVal any) error {
+	return GetViper().Unmarshal(rawVal)
 }
 
 func (m *Mysql) GetHost() string {

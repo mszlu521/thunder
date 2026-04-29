@@ -81,7 +81,7 @@ db:
     maxIdleConns: 10
     maxOpenConns: 100
     pingTimeout: "5s"
-    
+
   redis:
     addr: "localhost:6379"
     password: ""
@@ -123,6 +123,82 @@ pay:
     appSecret: "your-app-secret"
     notifyUrl: "https://yourdomain.com/pay/notify"
 ```
+
+### Custom Configuration
+
+Thunder supports user-defined configuration fields beyond the built-in ones. You can add any custom fields to `config.yml` and access them directly without modifying the framework code.
+
+**config.yml:**
+```yaml
+# Built-in configurations
+server:
+  port: 8080
+
+# Custom configurations
+myapp:
+  timeout: 30
+  endpoint: "https://api.example.com"
+  enabled: true
+  tags:
+    - "tag1"
+    - "tag2"
+```
+
+**Access custom configuration values:**
+
+```go
+import "github.com/mszlu521/thunder/config"
+
+// Direct value access (supports dot-separated keys)
+timeout := config.GetInt("myapp.timeout")          // 30
+endpoint := config.GetString("myapp.endpoint")      // "https://api.example.com"
+enabled := config.GetBool("myapp.enabled")          // true
+tags := config.GetStringSlice("myapp.tags")         // ["tag1", "tag2"]
+
+// Check if a key exists
+if config.IsSet("myapp.timeout") {
+    // Key exists
+}
+
+// Get map configuration
+settings := config.GetStringMap("myapp")
+// settings = map[string]any{"timeout": 30, "endpoint": "...", ...}
+```
+
+**Unmarshal to struct:**
+
+```go
+type MyAppConfig struct {
+    Timeout  int      `mapstructure:"timeout"`
+    Endpoint string   `mapstructure:"endpoint"`
+    Enabled  bool     `mapstructure:"enabled"`
+    Tags     []string `mapstructure:"tags"`
+}
+
+var myCfg MyAppConfig
+err := config.UnmarshalKey("myapp", &myCfg)
+if err != nil {
+    // Handle error
+}
+// myCfg.Timeout = 30, myCfg.Endpoint = "https://api.example.com", ...
+```
+
+**Available custom configuration APIs:**
+
+| Method | Description |
+|--------|-------------|
+| `config.GetString(key)` | Get string value |
+| `config.GetInt(key)` | Get integer value |
+| `config.GetBool(key)` | Get boolean value |
+| `config.GetFloat64(key)` | Get float64 value |
+| `config.GetStringSlice(key)` | Get string slice |
+| `config.GetStringMap(key)` | Get `map[string]any` |
+| `config.GetStringMapString(key)` | Get `map[string]string` |
+| `config.GetDuration(key)` | Get `time.Duration` |
+| `config.IsSet(key)` | Check if key exists |
+| `config.UnmarshalKey(key, &val)` | Unmarshal specific key to struct |
+| `config.Unmarshal(&val)` | Unmarshal entire config to struct |
+| `config.GetViper()` | Get the raw viper instance for advanced usage |
 
 ## Cloud Storage
 
